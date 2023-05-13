@@ -1,5 +1,8 @@
 import { Null, OpNode, Term, Universal } from '@lejeunerenard/symbolic-sets'
 import { OP_COMPLEMENT, OP_INTERSECT, OP_UNION } from '@lejeunerenard/symbolic-sets/node-types.js'
+const inspect = Symbol.for('nodejs.util.inspect.custom')
+
+export const INTERVAL = Symbol('INTERVAL')
 
 export class SearchTermNode extends Term {
   toSearchString () {
@@ -19,6 +22,69 @@ export class SearchNull extends Null {
   }
 }
 
+export class SearchIntervalNode extends SearchTermNode {
+  constructor (term, lowerBound, upperBound) {
+    super(term)
+    this.type = INTERVAL
+    this.lowerBound = lowerBound
+    this.upperBound = upperBound
+    if (this.lowerBound === undefined && this.upperBound === undefined) throw Error('found undefined')
+  }
+
+  [inspect] (depth, opts) {
+    let indent = ''
+    if (typeof opts.indentationLvl === 'number') {
+      while (indent.length < opts.indentationLvl) indent += ' '
+    }
+
+    return this.constructor.name + '(\n' +
+      indent + '  type: ' + opts.stylize(this.type.toString(), 'symbol') + '\n' +
+      indent + '  term: ' + opts.stylize(this.term, 'string') + '\n' +
+      indent + '  lowerBound: ' + opts.stylize(this.lowerBound, 'number') + '\n' +
+      indent + '  upperBound: ' + opts.stylize(this.upperBound, 'number') + '\n' +
+      indent + ')'
+  }
+
+  simplify () {
+    switch (this.term.toLowerCase()) {
+      case 'attack':
+      case 'defense':
+      case 'hp':
+        if (this.lowerBound === 0 && this.upperBound === 4) {
+          return new this.nodeFactory.UNIVERSAL()
+        }
+        return new this.constructor(this.term, this.lowerBound, this.upperBound)
+      default:
+        return new this.constructor(this.term, this.lowerBound, this.upperBound)
+    }
+  }
+
+  toCNF () {
+    return new this.constructor(this.term, this.lowerBound, this.upperBound)
+  }
+
+  toSearchString () {
+    let prefix = ''
+
+    if (this.lowerBound === this.upperBound) {
+      prefix = this.lowerBound
+    } else {
+      const rangeItems = []
+      if (this.lowerBound) rangeItems.push(this.lowerBound)
+      rangeItems.push('-')
+      if (this.upperBound) rangeItems.push(this.upperBound)
+
+      prefix = rangeItems.join('')
+    }
+
+    return prefix + (this.term || '')
+  }
+
+  toString () {
+    return this.toSearchString()
+  }
+}
+
 export class SearchOperatorNode extends OpNode {
   constructor () {
     super(...arguments)
@@ -28,6 +94,79 @@ export class SearchOperatorNode extends OpNode {
       UNIVERSAL: SearchUniversal,
       NULL: SearchNull
     }
+  }
+
+  [inspect] (depth, opts, inspect) {
+    let indent = ''
+    if (typeof opts.indentationLvl === 'number') {
+      while (indent.length < opts.indentationLvl) indent += ' '
+    }
+
+    const newOpts = Object.assign({}, opts, {
+      depth: opts.depth === null ? null : opts.depth - 1
+    })
+
+    return this.constructor.name + '(\n' +
+      indent + '  type: ' + opts.stylize(this.type.toString(), 'symbol') + '\n' +
+      indent + '  children: ' + inspect(this.children, newOpts).replace(/\n/g, `\n${indent}${indent}`) + '\n' +
+      indent + ')'
+  }
+
+  simplify () {
+    const result = super.simplify()
+    if (result.type === OP_UNION || result.type === OP_INTERSECT) {
+      const { interval, nonInterval } = result.children.reduce((accum, child) => {
+        if (child.type === INTERVAL) {
+          accum.interval[child.term] = accum.interval[child.term] || []
+          let mergedChild = false
+          for (let i = 0; i < accum.interval[child.term].length; i++) {
+            const node = accum.interval[child.term][i]
+            if (child.lowerBound - 1 <= node.upperBound && child.upperBound >= node.lowerBound - 1) {
+              if (result.type === OP_UNION) {
+                node.lowerBound = Math.min(node.lowerBound, child.lowerBound)
+                node.upperBound = Math.max(node.upperBound, child.upperBound)
+              } else {
+                node.lowerBound = Math.max(node.lowerBound, child.lowerBound)
+                node.upperBound = Math.min(node.upperBound, child.upperBound)
+              }
+              if (i < accum.interval[child.term].length - 1) {
+                const next = accum.interval[child.term][i + 1]
+                if (node.lowerBound - 1 <= next.upperBound && node.upperBound >= next.lowerBound - 1) {
+                  if (result.type === OP_UNION) {
+                    node.lowerBound = Math.min(node.lowerBound, next.lowerBound)
+                    node.upperBound = Math.max(node.upperBound, next.upperBound)
+                    // Cut out next since it was merged
+                    accum.interval[child.term].splice(i + 1, 1)
+                  }
+                }
+              }
+              mergedChild = true
+              break
+            } else if (child.upperBound < node.lowerBound) {
+              accum.interval[child.term].splice(i, 0, child)
+              mergedChild = true
+              break
+            }
+          }
+
+          if (!mergedChild) accum.interval[child.term].push(child)
+        } else {
+          accum.nonInterval.push(child)
+        }
+
+        return accum
+      }, { interval: {}, nonInterval: [] })
+      if (Object.keys(interval).length) {
+        const intervalChildren = Object.keys(interval).flatMap((key) => interval[key])
+        result.children = nonInterval.concat(intervalChildren)
+      }
+
+      if (result.children.length < 2) {
+        return result.children[0]
+      }
+    }
+
+    return result
   }
 
   toSearchString () {
