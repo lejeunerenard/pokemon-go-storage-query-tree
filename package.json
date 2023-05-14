@@ -1,8 +1,8 @@
 {
   "name": "pokemon-go-storage-search",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A library to create and manipulate trees representing search queries in Pokemon Go.",
+  "main": "tree.js",
   "type": "module",
   "scripts": {
     "lint": "eslint *.js",
@@ -20,6 +20,6 @@
     "tape": "^5.6.3"
   },
   "dependencies": {
-    "@lejeunerenard/symbolic-sets": "file:../symbolic-sets"
+    "@lejeunerenard/symbolic-sets": "lejeunerenard/symbolic-sets"
   }
 }
