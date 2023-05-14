@@ -188,3 +188,21 @@ export class SearchOperatorNode extends OpNode {
     return this.children.map((node) => node.toSearchString()).join(separator)
   }
 }
+
+export class SearchIntersectNode extends SearchOperatorNode {
+  constructor (children) {
+    super(OP_INTERSECT, children)
+  }
+}
+
+export class SearchUnionNode extends SearchOperatorNode {
+  constructor (children) {
+    super(OP_UNION, children)
+  }
+}
+
+export class SearchComplimentNode extends SearchOperatorNode {
+  constructor (child) {
+    super(OP_COMPLEMENT, [child])
+  }
+}
