@@ -59,6 +59,10 @@ export class SearchIntervalNode extends SearchTermNode {
     }
   }
 
+  isSimple () {
+    return true
+  }
+
   toCNF () {
     return new this.constructor(this.term, this.lowerBound, this.upperBound)
   }
