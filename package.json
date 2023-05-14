@@ -8,7 +8,7 @@
     "lint": "eslint *.js",
     "test": "npm run lint && tape tests/**/*.js"
   },
-  "keywords": [],
+  "keywords": ["pokemon go", "search", "query", "storage", "pokemon", "go"],
   "author": "Sean Zellmer <sean@lejeunerenard.com> (http://lejeunerenard.com/)",
   "license": "MIT",
   "devDependencies": {
