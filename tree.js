@@ -174,10 +174,11 @@ export class SearchOperatorNode extends OpNode {
   }
 
   toSearchString () {
+    const cnfForm = this.toCNF()
     let separator
-    switch (this.type) {
+    switch (cnfForm.type) {
       case OP_COMPLEMENT:
-        return '!' + this.children[0].toSearchString()
+        return '!' + cnfForm.children[0].toSearchString()
       case OP_UNION:
         separator = ','
         break
@@ -185,7 +186,7 @@ export class SearchOperatorNode extends OpNode {
         separator = '&'
         break
     }
-    return this.children.map((node) => node.toSearchString()).join(separator)
+    return cnfForm.children.map((node) => node.toSearchString()).join(separator)
   }
 }
 

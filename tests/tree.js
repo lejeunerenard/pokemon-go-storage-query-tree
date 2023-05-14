@@ -126,7 +126,7 @@ test('SearchIntervalNode', (t) => {
         ]),
         new SearchIntervalNode('attack', 0, 3)
       ])
-      t.deepEquals(sameTerm.toCNF().simplify(), expected, 'returns union of interval through distribution')
+      t.deepEquals(sameTerm.toCNF(), expected, 'returns union of interval through distribution')
 
       t.end()
     })
