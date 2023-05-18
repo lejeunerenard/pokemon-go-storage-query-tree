@@ -45,6 +45,48 @@ export class SearchIntervalNode extends SearchTermNode {
       indent + ')'
   }
 
+  isInvertable () {
+    return ['attack', 'defense', 'hp'].indexOf(this.term.toLowerCase()) !== -1
+  }
+
+  invert () {
+    if (!this.isInvertable()) {
+      return this
+    }
+
+    // Get Min & Max
+    let min, max
+    switch (this.term.toLowerCase()) {
+      case 'attack':
+      case 'defense':
+      case 'hp':
+        min = 0
+        max = 4
+        break
+    }
+
+    // Original interval covered the whole range
+    if (this.lowerBound === min && this.upperBound === max) {
+      return new SearchNull()
+    }
+
+    // Lower "Bookend" to Upper "Bookend"
+    if (this.lowerBound === min && this.upperBound < max) {
+      return new SearchIntervalNode(this.term, this.upperBound + 1, max)
+    }
+
+    // Upper "Bookend" to Lower "Bookend"
+    if (this.lowerBound <= max && this.upperBound === max) {
+      return new SearchIntervalNode(this.term, min, this.lowerBound - 1)
+    }
+
+    // Split range
+    return new SearchOperatorNode(OP_UNION, [
+      new SearchIntervalNode(this.term, min, this.lowerBound - 1),
+      new SearchIntervalNode(this.term, this.upperBound + 1, max)
+    ])
+  }
+
   simplify () {
     switch (this.term.toLowerCase()) {
       case 'attack':
@@ -118,6 +160,10 @@ export class SearchOperatorNode extends OpNode {
 
   simplify () {
     const result = super.simplify()
+    if (result.type === OP_COMPLEMENT && result.children[0].type === INTERVAL && result.children[0].isInvertable()) {
+      return result.children[0].invert()
+    }
+
     if (result.type === OP_UNION || result.type === OP_INTERSECT) {
       const { interval, nonInterval } = result.children.reduce((accum, child) => {
         if (child.type === INTERVAL) {

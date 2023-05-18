@@ -1,5 +1,5 @@
 import test from 'tape'
-import { OP_INTERSECT, OP_UNION, TERM } from '@lejeunerenard/symbolic-sets/node-types.js'
+import { OP_INTERSECT, OP_UNION, TERM, OP_COMPLEMENT } from '@lejeunerenard/symbolic-sets/node-types.js'
 import { SearchTermNode, SearchOperatorNode, SearchIntervalNode, INTERVAL } from '../tree.js'
 
 test('SearchTermNode', (t) => {
@@ -107,6 +107,30 @@ test('SearchIntervalNode', (t) => {
 
       t.deepEquals(cascadeOverlap.simplify(), new SearchIntervalNode('attack', 0, 3), 'union cascades')
 
+      t.end()
+    })
+
+    t.test('complement of interval for stats', (t) => {
+      const node = new SearchOperatorNode(OP_COMPLEMENT, [
+        new SearchIntervalNode('attack', 0, 2)
+      ])
+
+      t.deepEquals(node.simplify(), new SearchIntervalNode('attack', 3, 4), 'simple inverse')
+
+      const complicatedNode = new SearchOperatorNode(OP_COMPLEMENT, [
+        new SearchIntervalNode('defense', 1, 2)
+      ])
+
+      t.deepEquals(complicatedNode.simplify(), new SearchOperatorNode(OP_UNION, [
+        new SearchIntervalNode('defense', 0, 0),
+        new SearchIntervalNode('defense', 3, 4)
+      ]), 'extremes inverse')
+
+      const not4 = new SearchOperatorNode(OP_COMPLEMENT, [
+        new SearchIntervalNode('hp', 4, 4)
+      ])
+
+      t.deepEquals(not4.simplify(), new SearchIntervalNode('hp', 0, 3), 'not 4 stat')
       t.end()
     })
 
