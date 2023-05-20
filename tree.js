@@ -46,7 +46,7 @@ export class SearchIntervalNode extends SearchTermNode {
   }
 
   isInvertable () {
-    return ['attack', 'defense', 'hp'].indexOf(this.term.toLowerCase()) !== -1
+    return this.term && ['attack', 'defense', 'hp'].indexOf(this.term.toLowerCase()) !== -1
   }
 
   invert () {

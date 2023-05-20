@@ -40,6 +40,21 @@ test('SearchIntervalNode', (t) => {
     t.end()
   })
 
+  t.test('isInvertable()', (t) => {
+    const attackNode = new SearchIntervalNode('attack', 1, 2)
+    t.ok(attackNode.isInvertable())
+
+    const noTermNode = new SearchIntervalNode(null, 1, 2)
+    t.notOk(noTermNode.isInvertable())
+    t.end()
+  })
+
+  t.test('invert()', (t) => {
+    const noTermNode = new SearchIntervalNode(null, 1, 2)
+    t.doesNotThrow(() => { noTermNode.invert() })
+    t.end()
+  })
+
   t.test('toSearchString()', (t) => {
     const lowerBoundTerm = new SearchIntervalNode('beep', 1)
     t.is(lowerBoundTerm.toSearchString(), '1-beep')
