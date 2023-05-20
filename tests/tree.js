@@ -65,6 +65,10 @@ test('SearchIntervalNode', (t) => {
 
       t.ok(node.simplify() instanceof SearchIntervalNode, 'returns SearchTermNode')
       t.is(node.simplify().term, node.term, 'returns same term')
+
+      const noTermNode = new SearchIntervalNode(null, 1, 2)
+      t.deepEquals(noTermNode.simplify(), noTermNode, 'null term returns itself')
+
       t.end()
     })
 

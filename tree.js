@@ -88,7 +88,8 @@ export class SearchIntervalNode extends SearchTermNode {
   }
 
   simplify () {
-    switch (this.term.toLowerCase()) {
+    const term = this.term ? this.term.toLowerCase() : null
+    switch (term) {
       case 'attack':
       case 'defense':
       case 'hp':
