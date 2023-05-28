@@ -222,6 +222,9 @@ export class SearchOperatorNode extends OpNode {
 
   toSearchString () {
     const cnfForm = this.toCNF()
+    // Reduced to a "simple" node
+    if (!cnfForm.children.length) return cnfForm.toSearchString()
+
     let separator
     switch (cnfForm.type) {
       case OP_COMPLEMENT:

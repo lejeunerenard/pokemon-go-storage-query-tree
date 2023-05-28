@@ -210,4 +210,14 @@ test('SearchOperatorNode', (t) => {
       t.end()
     })
   })
+
+  t.test('toSearchString()', (t) => {
+    const node = new SearchOperatorNode(OP_UNION, [
+      new SearchTermNode('beep'),
+      new SearchTermNode('beep')
+    ])
+
+    t.is(node.toSearchString(), 'beep', 'outputs string even if node reduces to simple node')
+    t.end()
+  })
 })

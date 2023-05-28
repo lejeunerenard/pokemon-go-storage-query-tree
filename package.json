@@ -1,6 +1,6 @@
 {
   "name": "pokemon-go-storage-query-tree",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A library to create and manipulate trees representing search queries in Pokemon Go.",
   "main": "tree.js",
   "type": "module",
